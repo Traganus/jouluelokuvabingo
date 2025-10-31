@@ -1,247 +1,251 @@
 <!doctype html>
 <html lang="fi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Selaimen Bingo</title>
-  <style>
-    :root{--gap:8px;--cell-min:64px}
-    body{font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:18px;background:linear-gradient(180deg,#f7fbff,#ffffff);color:#0f172a}
-    h1{font-size:1.4rem;margin:0 0 12px}
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-    button{background:#0ea5a4;border:none;color:white;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 4px 10px rgba(2,6,23,0.08)}
-    button.secondary{background:#e2e8f0;color:#0f172a}
-    label{font-size:0.9rem}
-    .board-wrap{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
-    .board{display:grid;gap:var(--gap);background:linear-gradient(180deg,#fff,#fbfdff);padding:12px;border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,0.06);border:4px solid transparent;transition:all .35s}
-    .board.decor{border-image:linear-gradient(45deg,#ff7aa2,#7b61ff) 1;box-shadow:0 8px 30px rgba(123,97,255,0.12)}
-    .cell{min-width:var(--cell-min);min-height:var(--cell-min);display:flex;align-items:center;justify-content:center;padding:8px;border-radius:8px;font-weight:600;text-align:center;position:relative;background:linear-gradient(180deg,#fbfdff,#fff);box-shadow:inset 0 -6px 12px rgba(2,6,23,0.02);word-break:break-word}
-    .cell .text{z-index:2;padding:6px}
-    .cell .tick{position:absolute;inset:0;border-radius:8px;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .22s}
-    .cell.checked .tick{opacity:1}
-    .tick svg{width:56px;height:56px;opacity:.65}
-    .board{max-width:calc(100vw - 220px)}
-    @media(max-width:880px){.board{max-width:100%}}
-    .sidebar{max-width:300px;min-width:220px}
-    textarea{width:100%;min-height:120px;padding:8px;border-radius:8px;border:1px solid #cbd5e1}
-    .note{font-size:0.85rem;color:#475569}
-    .log{margin-top:10px;font-size:0.9rem;color:#0f172a}
-    .small{font-size:0.85rem;color:#475569}
-    .sparkles{position:absolute;inset:-6px;border-radius:12px;pointer-events:none}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jouluelokuvabingo</title>
+<style>
+:root {
+  --gap:8px;
+  --cell-min:64px;
+  --cell-font:1rem;
+}
+
+body {
+  font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  margin:18px;
+  background:linear-gradient(180deg,#f7fbff,#ffffff);
+  color:#0f172a;
+}
+
+h1{font-size:1.4rem;margin:0 0 12px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+button{background:#0ea5a4;border:none;color:white;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 4px 10px rgba(2,6,23,0.08)}
+button.secondary{background:#e2e8f0;color:#0f172a}
+.board-wrap{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.board{display:grid;gap:var(--gap);background:linear-gradient(180deg,#fff,#fbfdff);padding:12px;border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,0.06);border:4px solid transparent;transition:all .35s;width:50vw;max-width:600px;}
+.board.decor{border-image:linear-gradient(45deg,#ff7aa2,#7b61ff) 1;box-shadow:0 8px 30px rgba(123,97,255,0.12)}
+.cell{
+  min-width:var(--cell-min);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px;
+  border-radius:8px;
+  font-weight:600;
+  text-align:center;
+  position:relative;
+  background:linear-gradient(180deg,#fbfdff,#fff);
+  box-shadow:inset 0 -6px 12px rgba(2,6,23,0.02);
+  word-break:break-word;
+  font-size:var(--cell-font);
+  aspect-ratio:1 / 1; /* tekee ruudusta neliön */
+  overflow-wrap:break-word;
+}
+.cell .text{z-index:2;padding:6px;white-space:pre-wrap;}
+.cell .tick{position:absolute;inset:0;border-radius:8px;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .22s}
+.cell.checked .tick{opacity:1}
+.tick svg{width:56px;height:56px;opacity:.65}
+.sidebar{max-width:300px;min-width:220px}
+textarea{width:100%;min-height:120px;padding:8px;border-radius:8px;border:1px solid #cbd5e1}
+.note{font-size:0.85rem;color:#475569}
+.log{margin-top:10px;font-size:0.9rem;color:#0f172a}
+.small{font-size:0.85rem;color:#475569}
+.sparkles{position:absolute;inset:-6px;border-radius:12px;pointer-events:none}
+
+/* responsiivisuus */
+@media(max-width:1024px){.board{width:60vw;max-width:500px} :root{--cell-font:0.9rem}}
+@media(max-width:768px){.board{width:80vw;max-width:400px} :root{--cell-font:0.85rem}}
+@media(max-width:480px){.board{width:95vw;max-width:95vw} :root{--cell-font:0.75rem}}
+</style>
 </head>
 <body>
-  <h1>Jouluelokuvabingo</h1>
-  <div class="controls">
-    <button id="newWordsBtn">Päivitä sanat</button>
-    <button id="updateGridBtn" class="secondary">Luo uusi ruudukko</button>
-    <button id="clearStorage" class="secondary">Poista tallennetut tiedot</button>
-  </div>
+<h1>Jouluelokuvabingo</h1>
+<div class="controls">
+  <button id="newWordsBtn">Päivitä sanat</button>
+  <button id="updateGridBtn" class="secondary">Luo uusi ruudukko</button>
+  <button id="clearStorage" class="secondary">Poista tallennetut tiedot</button>
+</div>
 
-  <div class="board-wrap">
-    <div id="board" class="board"></div>
-    <div class="sidebar">
-      <div class="note">
-        Ohjeet: Lisää ruutuaiheita painamalla <b>Päivitä sanat</b>.  
-        Erottele eri ruutujen aiheet pilkulla.  
-        Kun tallennat aiheet, ne arvotaan ruudukkoon.
-        Voit vaihtaa ruudukon kokoa painamalla <b>Luo uusi ruudukko</b>. Tallennetut aiheet säilyvät muistissa, mutta ne on arvottava uudelleen muuttuneeseen ruudukkoon.
-      </div>
-      <div class="log small" id="status"></div>
-      <div style="margin-top:10px" class="small">
-        Tallennettu bingotila palautetaan automaattisesti sivun latauksella.
-      </div>
+<div class="board-wrap">
+  <div id="board" class="board"></div>
+  <div class="sidebar">
+    <div class="note">
+      Ohjeet: Lisää sanoja painamalla <b>Päivitä sanat</b>.  
+      Käytä pilkkua tai rivinvaihtoa erottamaan sanat.  
+      Ruudukon koko vaihdetaan <b>Luo uusi ruudukko</b> -painikkeella.
+    </div>
+    <div class="log small" id="status"></div>
+    <div style="margin-top:10px" class="small">
+      Tallennettu bingotila palautetaan automaattisesti sivun latauksella.
     </div>
   </div>
+</div>
 
-  <dialog id="wordsModal">
-    <form method="dialog" style="min-width:320px">
-      <h3>Uudet sanat</h3>
-      <div class="small">Anna sanat pilkuilla, välilyönnillä tai rivinvaihdolla eroteltuna.</div>
-      <textarea id="wordsInput" placeholder="esim. omena, banaani, kissa\nkoira"></textarea>
-      <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
-        <button id="cancelWords" type="button" class="secondary">Peruuta</button>
-        <button id="saveWords" type="button">Tallenna</button>
-      </div>
-      <div id="wordHint" class="small" style="margin-top:8px;color:#334155"></div>
-    </form>
-  </dialog>
+<dialog id="wordsModal">
+  <form method="dialog" style="min-width:320px">
+    <h3>Uudet sanat</h3>
+    <div class="small">Anna sanat pilkuilla tai rivivaihdoilla eroteltuna.</div>
+    <textarea id="wordsInput" placeholder="esim. Kissa syö, Koira juoksee"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+      <button id="cancelWords" type="button" class="secondary">Peruuta</button>
+      <button id="saveWords" type="button">Tallenna</button>
+    </div>
+    <div id="wordHint" class="small" style="margin-top:8px;color:#334155"></div>
+  </form>
+</dialog>
 
-  <dialog id="gridModal">
-    <form method="dialog" style="min-width:280px">
-      <h3>Päivitä ruudukko</h3>
-      <div class="small">Anna uusi ruutujen määrä per sivu (2–10).</div>
-      <input id="gridInput" type="number" min="2" max="10" value="5"
-             style="margin-top:8px;padding:8px;border-radius:8px;border:1px solid #cbd5e1" />
-      <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
-        <button id="cancelGrid" type="button" class="secondary">Peruuta</button>
-        <button id="applyGrid" type="button">Käytä</button>
-      </div>
-    </form>
-  </dialog>
+<dialog id="gridModal">
+  <form method="dialog" style="min-width:280px">
+    <h3>Päivitä ruudukko</h3>
+    <div class="small">Anna uusi ruutujen määrä per sivu (2–10).</div>
+    <input id="gridInput" type="number" min="2" max="10" value="5"
+           style="margin-top:8px;padding:8px;border-radius:8px;border:1px solid #cbd5e1" />
+    <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+      <button id="cancelGrid" type="button" class="secondary">Peruuta</button>
+      <button id="applyGrid" type="button">Käytä</button>
+    </div>
+  </form>
+</dialog>
 
-  <script>
-    const STORAGE_KEY = 'bingoData_v1';
-    let state = { size:5, words:[], layout:[], checked:[], order:[], decorative:false };
+<script>
+const STORAGE_KEY='bingoData_v1';
+let state={size:5,words:[],layout:[],checked:[],order:[],decorative:false};
 
-    const boardEl = document.getElementById('board');
-    const statusEl = document.getElementById('status');
-    const wordsModal = document.getElementById('wordsModal');
-    const wordsInput = document.getElementById('wordsInput');
-    const wordHint = document.getElementById('wordHint');
-    const gridModal = document.getElementById('gridModal');
-    const gridInput = document.getElementById('gridInput');
+const boardEl=document.getElementById('board');
+const statusEl=document.getElementById('status');
+const wordsModal=document.getElementById('wordsModal');
+const wordsInput=document.getElementById('wordsInput');
+const wordHint=document.getElementById('wordHint');
+const gridModal=document.getElementById('gridModal');
+const gridInput=document.getElementById('gridInput');
 
-    document.getElementById('newWordsBtn').addEventListener('click', openWords);
-    document.getElementById('updateGridBtn').addEventListener('click', openGrid);
-    document.getElementById('saveWords').addEventListener('click', saveWords);
-    document.getElementById('cancelWords').addEventListener('click',()=>wordsModal.close());
-    document.getElementById('applyGrid').addEventListener('click', applyGrid);
-    document.getElementById('cancelGrid').addEventListener('click',()=>gridModal.close());
-    document.getElementById('clearStorage').addEventListener('click', clearStorage);
+document.getElementById('newWordsBtn').addEventListener('click',openWords);
+document.getElementById('updateGridBtn').addEventListener('click',openGrid);
+document.getElementById('saveWords').addEventListener('click',saveWords);
+document.getElementById('cancelWords').addEventListener('click',()=>wordsModal.close());
+document.getElementById('applyGrid').addEventListener('click',applyGrid);
+document.getElementById('cancelGrid').addEventListener('click',()=>gridModal.close());
+document.getElementById('clearStorage').addEventListener('click',clearStorage);
 
-    function saveToLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    function loadFromLocal(){
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return false;
-      try{
-        const parsed = JSON.parse(raw);
-        if(parsed && parsed.size && Array.isArray(parsed.layout)){
-          state = Object.assign(state, parsed);
-          return true;
-        }
-      }catch(e){ console.warn('invalid stored data', e); }
-      return false;
+function saveToLocal(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+function loadFromLocal(){
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw) return false;
+  try{
+    const parsed=JSON.parse(raw);
+    if(parsed && parsed.size && Array.isArray(parsed.layout)){
+      state=Object.assign(state,parsed);
+      return true;
     }
+  }catch(e){ console.warn('invalid stored data',e); }
+  return false;
+}
 
-    function openWords(){
-      wordsInput.value = state.words.join('\n');
-      wordHint.textContent = `Sanalista sisältää ${state.words.length} sanaa.`;
-      wordsModal.showModal();
+function openWords(){
+  wordsInput.value=state.words.join('\n'); // näytä rivillä per sana
+  wordHint.textContent=`Sanalista sisältää ${state.words.length} sanaa.`;
+  wordsModal.showModal();
+}
+
+function parseWords(raw){
+  // Pilkku tai rivinvaihto erottaa sanat
+  let items=raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  const seen=new Set(),res=[];
+  for(const w of items){ if(!seen.has(w)){seen.add(w);res.push(w);} }
+  return res;
+}
+
+function saveWords(){
+  const raw=wordsInput.value;
+  const parsed=parseWords(raw);
+  if(parsed.length===0){ alert('Anna vähintään yksi sana.'); return; }
+  state.words=parsed;
+  const cellCount=state.size*state.size;
+  if(parsed.length<cellCount){
+    alert(`Sanalista on lyhyempi (${parsed.length}) kuin ruudukon koko (${cellCount}). Ruudukko jätetään täyttämättä.`);
+    state.layout=new Array(cellCount).fill('');
+    state.checked=new Array(cellCount).fill(false);
+    state.order=[];
+    state.decorative=false;
+    saveToLocal(); render(); wordsModal.close(); return;
+  }
+  let chosen=parsed.length>cellCount?shuffleArray(parsed).slice(0,cellCount):shuffleArray(parsed);
+  if(parsed.length>cellCount) alert(`Sanalista oli pidempi kuin ruudut; arvottiin ${cellCount} satunnaista sanaa.`);
+  state.layout=chosen.slice();
+  state.checked=new Array(cellCount).fill(false);
+  state.order=[];
+  state.decorative=false;
+  saveToLocal(); render(); wordsModal.close();
+}
+
+function openGrid(){ gridInput.value=state.size; gridModal.showModal(); }
+
+function applyGrid(){
+  const v=Number(gridInput.value);
+  if(!v||v<2||v>10){ alert('Anna luku väliltä 2–10.'); return; }
+  if(state.words.length>0){
+    if(!confirm('Ruudukon koko muuttuu — nykyinen ruudukko tyhjennetään. Sanalista säilyy oletuksena. Jatketaanko?')){
+      gridModal.close(); return;
     }
+  }
+  const cellCount=v*v;
+  state.size=v;
+  state.layout=new Array(cellCount).fill('');
+  state.checked=new Array(cellCount).fill(false);
+  state.order=[];
+  state.decorative=false;
+  saveToLocal(); render(); gridModal.close();
+}
 
-    function parseWords(raw){
-      let items = raw.split(',').map(s=>s.trim()).filter(Boolean);
-      if(items.length===1 && items[0].includes(' ')){
-        items = items[0].split(/\s+/).map(s=>s.trim()).filter(Boolean);
-      }
-      const seen=new Set(); const res=[];
-      for(const w of items){ if(!seen.has(w)){ seen.add(w); res.push(w); } }
-      return res;
-    }
+function clearStorage(){
+  if(confirm('Tyhjennetään paikallinen tallennus ja palautetaan oletustila?')){
+    localStorage.removeItem(STORAGE_KEY);
+    state={size:5,words:[],layout:new Array(25).fill(''),checked:new Array(25).fill(false),order:[],decorative:false};
+    render();
+  }
+}
 
-    function saveWords(){
-      const raw = wordsInput.value;
-      const parsed = parseWords(raw);
-      if(parsed.length===0){ alert('Anna vähintään yksi sana.'); return; }
-      state.words = parsed;
-      const cellCount = state.size * state.size;
-      if(parsed.length < cellCount){
-        alert(`Sanalista on lyhyempi (${parsed.length}) kuin ruudukon koko (${cellCount}). Ruudukko jätetään täyttämättä.`);
-        state.layout = new Array(cellCount).fill('');
-        state.checked = new Array(cellCount).fill(false);
-        state.order = [];
-        state.decorative = false;
-        saveToLocal(); render(); wordsModal.close(); return;
-      }
-      let chosen = parsed.length > cellCount ? shuffleArray(parsed).slice(0, cellCount) : shuffleArray(parsed);
-      if(parsed.length > cellCount){
-        alert(`Sanalista oli pidempi kuin ruudut; arvottiin ${cellCount} satunnaista sanaa.`);
-      }
-      state.layout = chosen.slice();
-      state.checked = new Array(cellCount).fill(false);
-      state.order = [];
-      state.decorative = false;
-      saveToLocal(); render(); wordsModal.close();
-    }
+function shuffleArray(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
-    function openGrid(){ gridInput.value = state.size; gridModal.showModal(); }
+function render(){
+  const n=state.size, cellCount=n*n;
+  boardEl.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  boardEl.innerHTML='';
+  boardEl.classList.toggle('decor',!!state.decorative);
+  if(!state.layout||state.layout.length!==cellCount) state.layout=new Array(cellCount).fill('');
+  if(!state.checked||state.checked.length!==cellCount) state.checked=new Array(cellCount).fill(false);
+  for(let i=0;i<cellCount;i++){
+    const cell=document.createElement('div');
+    cell.className='cell'+(state.checked[i]?' checked':'');
+    cell.dataset.idx=i;
+    const txt=document.createElement('div');
+    txt.className='text'; txt.textContent=state.layout[i]||'';
+    const tick=document.createElement('div');
+    tick.className='tick';
+    tick.innerHTML=`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.5L9 17.5L20 6.5" stroke="rgba(16,185,129,0.92)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    cell.append(txt,tick);
+    cell.addEventListener('click',()=>toggleCell(i));
+    boardEl.appendChild(cell);
+  }
+  statusEl.textContent=`Ruudukon koko: ${n}×${n}. Paikalla sanoja: ${state.layout.filter(Boolean).length}/${cellCount}. Rastit: ${state.checked.filter(Boolean).length}.`;
+}
 
-    function applyGrid(){
-      const v = Number(gridInput.value);
-      if(!v || v<2 || v>10){ alert('Anna luku väliltä 2–10.'); return; }
-      if(state.words.length>0){
-        if(!confirm('Ruudukon koko muuttuu — nykyinen ruudukko tyhjennetään. Sanalista säilyy oletuksena. Jatketaanko?')){
-          gridModal.close(); return;
-        }
-      }
-      const cellCount = v*v;
-      state.size = v;
-      state.layout = new Array(cellCount).fill('');
-      state.checked = new Array(cellCount).fill(false);
-      state.order = [];
-      state.decorative = false;
-      saveToLocal(); render(); gridModal.close();
-    }
+function toggleCell(i){ state.checked[i]=!state.checked[i]; if(state.checked[i]) state.order.push(i); else state.order=state.order.filter(x=>x!==i); saveToLocal(); checkBingo(); render(); }
 
-    function clearStorage(){
-      if(confirm('Tyhjennetään paikallinen tallennus ja palautetaan oletustila?')){
-        localStorage.removeItem(STORAGE_KEY);
-        state = {size:5, words:[], layout:new Array(25).fill(''), checked:new Array(25).fill(false), order:[], decorative:false};
-        render();
-      }
-    }
+function checkBingo(){
+  const n=state.size, c=state.checked, lines=[];
+  for(let r=0;r<n;r++){ if(c.slice(r*n,r*n+n).every(Boolean)) lines.push('row'); }
+  for(let col=0;col<n;col++){ let ok=true; for(let r=0;r<n;r++) if(!c[r*n+col]) ok=false; if(ok) lines.push('col'); }
+  if([...Array(n).keys()].every(i=>c[i*n+i])) lines.push('diag1');
+  if([...Array(n).keys()].every(i=>c[i*n+(n-1-i)])) lines.push('diag2');
+  if(lines.length>0 && !state.decorative){ state.decorative=true; saveToLocal(); render(); alert('BINGO!'); const sp=document.createElement('div'); sp.className='sparkles'; boardEl.appendChild(sp); setTimeout(()=>sp.remove(),2200); }
+  else if(lines.length===0 && state.decorative){ state.decorative=false; saveToLocal(); }
+}
 
-    function shuffleArray(arr){
-      const a = arr.slice();
-      for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
-      return a;
-    }
+function init(){ state.layout=new Array(state.size*state.size).fill(''); state.checked=new Array(state.size*state.size).fill(false); if(!loadFromLocal()) saveToLocal(); render(); if(state.decorative) boardEl.classList.add('decor'); }
 
-    function render(){
-      const n = state.size;
-      const cellCount = n*n;
-      boardEl.style.gridTemplateColumns = `repeat(${n}, minmax(0,1fr))`;
-      boardEl.innerHTML = '';
-      boardEl.classList.toggle('decor', !!state.decorative);
-      if(!state.layout || state.layout.length !== cellCount) state.layout = new Array(cellCount).fill('');
-      if(!state.checked || state.checked.length !== cellCount) state.checked = new Array(cellCount).fill(false);
-
-      for(let i=0;i<cellCount;i++){
-        const cell=document.createElement('div');
-        cell.className='cell'+(state.checked[i]?' checked':'');
-        cell.dataset.idx=i;
-        const txt=document.createElement('div');
-        txt.className='text'; txt.textContent=state.layout[i]||'';
-        const tick=document.createElement('div');
-        tick.className='tick';
-        tick.innerHTML=`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.5L9 17.5L20 6.5" stroke="rgba(16,185,129,0.92)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-        cell.append(txt,tick);
-        cell.addEventListener('click',()=>toggleCell(i));
-        boardEl.appendChild(cell);
-      }
-      const placed = state.layout.filter(Boolean).length;
-      statusEl.textContent = `Ruudukon koko: ${n}×${n}. Paikalla sanoja: ${placed}/${cellCount}. Rastit: ${state.checked.filter(Boolean).length}.`;
-    }
-
-    function toggleCell(i){
-      state.checked[i] = !state.checked[i];
-      if(state.checked[i]) state.order.push(i); else state.order = state.order.filter(x=>x!==i);
-      saveToLocal(); checkBingo(); render();
-    }
-
-    function checkBingo(){
-      const n=state.size, c=state.checked, lines=[];
-      for(let r=0;r<n;r++){ if(c.slice(r*n,r*n+n).every(Boolean)) lines.push('row'); }
-      for(let col=0;col<n;col++){ let ok=true; for(let r=0;r<n;r++) if(!c[r*n+col]) ok=false; if(ok) lines.push('col'); }
-      if([...Array(n).keys()].every(i=>c[i*n+i])) lines.push('diag1');
-      if([...Array(n).keys()].every(i=>c[i*n+(n-1-i)])) lines.push('diag2');
-      if(lines.length>0 && !state.decorative){
-        state.decorative=true; saveToLocal(); render(); alert('BINGO!');
-        const sp=document.createElement('div'); sp.className='sparkles'; boardEl.appendChild(sp);
-        setTimeout(()=>sp.remove(),2200);
-      }else if(lines.length===0 && state.decorative){ state.decorative=false; saveToLocal(); }
-    }
-
-    function init(){
-      state.layout = new Array(state.size*state.size).fill('');
-      state.checked = new Array(state.size*state.size).fill(false);
-      if(loadFromLocal()){} else { saveToLocal(); }
-      render();
-      if(state.decorative) boardEl.classList.add('decor');
-    }
-
-    init();
-  </script>
+init();
+</script>
 </body>
 </html>
