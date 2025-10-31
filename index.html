@@ -42,10 +42,10 @@
     <div id="board" class="board"></div>
     <div class="sidebar">
       <div class="note">
-        Ohjeet: Lisää sanoja painamalla <b>Päivitä sanat</b>.  
-        Voit erotella sanoja pilkulla, välilyönnillä tai rivinvaihdolla.  
-        Kun tallennat sanat, ne arvotaan ruudukkoon.
-        Voit vaihtaa ruudukon kokoa painamalla <b>Luo uusi ruudukko</b>. Tallennetut sanat säilyvät muistissa, mutta ne on arvottava uudelleen muuttuneeseen ruudukkoon.
+        Ohjeet: Lisää ruutuaiheita painamalla <b>Päivitä sanat</b>.  
+        Erottele eri ruutujen aiheet pilkulla.  
+        Kun tallennat aiheet, ne arvotaan ruudukkoon.
+        Voit vaihtaa ruudukon kokoa painamalla <b>Luo uusi ruudukko</b>. Tallennetut aiheet säilyvät muistissa, mutta ne on arvottava uudelleen muuttuneeseen ruudukkoon.
       </div>
       <div class="log small" id="status"></div>
       <div style="margin-top:10px" class="small">
@@ -121,7 +121,7 @@
     }
 
     function parseWords(raw){
-      let items = raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+      let items = raw.split(',').map(s=>s.trim()).filter(Boolean);
       if(items.length===1 && items[0].includes(' ')){
         items = items[0].split(/\s+/).map(s=>s.trim()).filter(Boolean);
       }
