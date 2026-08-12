@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Format Conversion Text Checker</title>
+<style>
+:root{--bg:#f5f6f8;--panel:#fff;--text:#17202a;--muted:#69727d;--border:#d8dde4;--blue:#315efb;--green:#bfecc9;--red:#ffd6d6;--yellow:#fff0bd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1450px;margin:auto;padding:28px 20px 60px}h1{margin:0 0 5px;font-size:28px}.intro{color:var(--muted);max-width:950px;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.panel{background:var(--panel);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}.head span{color:var(--muted);font-size:12px}
+textarea{width:100%;min-height:330px;border:0;outline:0;resize:vertical;padding:15px;font:14px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:15px 0}.controls button{border:0;border-radius:8px;padding:9px 15px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}.controls button.secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+.controls label{color:var(--muted);display:flex;gap:6px;align-items:center}.controls input{width:65px;padding:6px;border:1px solid var(--border);border-radius:6px}
+.summary{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0}.stat{background:#fff;border:1px solid var(--border);border-radius:9px;padding:9px 13px}.stat b{font-size:18px}
+.notice{background:#fff8df;border:1px solid #e2c96e;border-radius:10px;padding:12px 14px;margin:10px 0}
+.results{display:grid;gap:12px}.result{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}.result.bad{border-color:#dc9999}.result.review{border-color:#e0c66c}
+.rhead{padding:10px 13px;background:#fafafa;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.badge{font-size:12px;font-weight:800;border-radius:999px;padding:3px 8px}.badbadge{background:var(--red)}.warnbadge{background:var(--yellow)}
+.pair{display:grid;grid-template-columns:1fr 1fr}.box{padding:14px;min-width:0}.box+.box{border-left:1px solid var(--border)}.caption{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.diff{white-space:pre-wrap;overflow-wrap:anywhere}.same{background:var(--green);border-radius:3px;padding:1px 2px}.different{background:var(--red);border-radius:3px;padding:1px 2px}
+.empty{background:#fff;border:1px dashed var(--border);border-radius:11px;padding:28px;text-align:center;color:var(--muted)}
+.help{color:var(--muted);font-size:13px;margin-top:18px}.ok{background:#e4f6e8;border:1px solid #a8d9b2;border-radius:10px;padding:13px}
+details{margin-top:8px}summary{cursor:pointer;color:var(--muted)}
+@media(max-width:800px){.grid,.pair{grid-template-columns:1fr}.box+.box{border-left:0;border-top:1px solid var(--border)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Format Conversion Text Checker</h1>
+<p class="intro">
+Liitä vasemmalle alkuperäinen tekstimassa ja oikealle siitä tehty uusi formaatti.
+Työkalu yrittää tunnistaa kysymys-/tekstiblokit ilman numerointiin luottamista,
+etsii vastaavat blokit sisällön perusteella ja näyttää epäilyttävät kohdat.
+Kaikki tapahtuu paikallisesti selaimessa.
+</p>
+
+<section class="grid">
+<div class="panel"><div class="head"><b>1) ORIGINAL</b><span id="oc">0 words</span></div>
+<textarea id="orig" placeholder="Ctrl+A → Ctrl+C Wordista → Ctrl+V tähän"></textarea></div>
+<div class="panel"><div class="head"><b>2) CONVERTED / NEW FORMAT</b><span id="cc">0 words</span></div>
+<textarea id="conv" placeholder="Liitä tähän GIFT, Moodle XML, HTML-taulukko tai muu uusi formaatti"></textarea></div>
+</section>
+
+<div class="controls">
+<button id="run">Check</button><button class="secondary" id="demo">Load demo</button><button class="secondary" id="clear">Clear</button>
+<label>Review below <input id="threshold" type="number" min="0" max="100" value="72">%</label>
+</div>
+<div id="summary" class="summary"></div><div id="notice"></div>
+<div id="results"><div class="empty">Liitä kaksi tekstiä ja paina Check.</div></div>
+
+<p class="help">
+Perusvertailu on tarkoituksella deterministinen: se ei kysy tekoälyltä, ovatko kaksi kysymystä "semanttisesti samoja".
+Sama sana tunnistetaan samaksi sanaksi, vaikka välimerkit, numerointi tai formaatin syntaksi muuttuisivat.
+</p>
+</main>
+
+<script>
+"use strict";
+
+/* ---------- 1. TEKSTIN NORMALISOINTI ---------- */
+
+function tokenize(text){
+  return (text.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu)||[]);
+}
+function norm(s){
+  return s.toLocaleLowerCase("fi-FI").normalize("NFKC")
+    .replace(/^[^\p{L}\p{N}]+/gu,"")
+    .replace(/[^\p{L}\p{N}]+$/gu,"");
+}
+function words(text){return tokenize(text).map(x=>({raw:x,norm:norm(x)})).filter(x=>x.norm);}
+
+/* ---------- 2. FORMAATTISYNTAXIN KEVYT POISTO ---------- */
+
+function stripFormatNoise(text){
+  let s=text.replace(/\r\n?/g,"\n");
+  // HTML/XML tags
+  s=s.replace(/<[^>]*>/g," ");
+  // Common GIFT control syntax; keep ordinary words.
+  s=s.replace(/::[^:\n]*::/g," ");
+  s=s.replace(/(^|\s)[=~#%{}](?=\s|[A-Za-zÀ-ž])/g,"$1");
+  // Numbering/bullet prefixes, but NOT numbers inside normal sentences.
+  s=s.replace(/(^|\n)\s*(?:\(?\d{1,4}\)?[.)]|[A-Ha-h][.)])\s*/g,"$1");
+  s=s.replace(/(^|\n)\s*[-•*]\s*/g,"$1");
+  return s;
+}
+
+/* ---------- 3. BLOKKIEN TUNNISTUS ---------- */
+
+function splitBlocks(text){
+  const s=stripFormatNoise(text);
+  const lines=s.split("\n").map(x=>x.trim()).filter(Boolean);
+  const blocks=[];
+  let cur=[];
+
+  function flush(){
+    if(cur.length){
+      const t=cur.join(" ").replace(/\s+/g," ").trim();
+      if(t) blocks.push(t);
+      cur=[];
+    }
+  }
+
+  // Strong cues:
+  // - blank-line structure
+  // - question marks
+  // - answer-choice runs
+  // - GIFT answer braces already removed above
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    cur.push(line);
+
+    const next=lines[i+1]||"";
+    const endsQuestion=/[?？]\s*$/.test(line);
+    const looksChoice=/^(?:[A-Ha-h][.)]|[=~])\s+/.test(next);
+    const currentChoice=/^(?:[A-Ha-h][.)]|[=~])\s+/.test(line);
+
+    if(endsQuestion && !looksChoice) flush();
+    else if(currentChoice && next && !/^(?:[A-Ha-h][.)]|[=~])\s+/.test(next) && !/[?？]\s*$/.test(next)) flush();
+  }
+  flush();
+
+  // If the above over-splits tiny fragments, merge fragments that don't
+  // look like independent questions.
+  const merged=[];
+  for(const b of blocks){
+    if(!merged.length){merged.push(b);continue;}
+    const w=words(b);
+    const hasQ=/[?？]/.test(b);
+    if(w.length<5 && !hasQ) merged[merged.length-1]+=" "+b;
+    else merged.push(b);
+  }
+
+  // If there are very few meaningful blocks, fallback to paragraph chunks.
+  if(merged.length<2){
+    const paras=s.split(/\n\s*\n+/).map(x=>x.trim()).filter(Boolean);
+    if(paras.length>=2) return paras;
+    const all=words(s).map(x=>x.raw);
+    const out=[];
+    for(let i=0;i<all.length;i+=70) out.push(all.slice(i,i+70).join(" "));
+    return out.filter(Boolean);
+  }
+  return merged;
+}
+
+/* ---------- 4. LCS-PERUSTEINEN TEKSTIVASTAAVUUS ---------- */
+
+function similarity(a,b){
+  const A=words(a),B=words(b);
+  if(!A.length&&!B.length)return 1;
+  if(!A.length||!B.length)return 0;
+  const n=A.length,m=B.length;
+  let prev=new Uint16Array(m+1),cur=new Uint16Array(m+1);
+  for(let i=1;i<=n;i++){
+    for(let j=1;j<=m;j++){
+      cur[j]=A[i-1].norm===B[j-1].norm?prev[j-1]+1:Math.max(prev[j],cur[j-1]);
+    }
+    [prev,cur]=[cur,prev];
+  }
+  return 2*prev[m]/(n+m);
+}
+
+/* ---------- 5. PARHAAN VASTINEEN ETSINTÄ ---------- */
+
+function matchBlocks(A,B){
+  const pairs=[],used=new Set();
+  for(let i=0;i<A.length;i++){
+    let best={score:-1,j:-1};
+    for(let j=0;j<B.length;j++){
+      if(used.has(j))continue;
+      const s=similarity(A[i],B[j]);
+      if(s>best.score)best={score:s,j};
+    }
+    if(best.j>=0)used.add(best.j);
+    pairs.push({i,j:best.j,score:Math.max(0,best.score),a:A[i],b:best.j>=0?B[best.j]:""});
+  }
+  return pairs;
+}
+
+/* ---------- 6. SANAKOHTAINEN VISUAALINEN DIFF ---------- */
+
+function align(a,b){
+  const A=words(a),B=words(b),n=A.length,m=B.length;
+  if(n*m>1000000)return greedyAlign(A,B);
+
+  const dp=Array.from({length:n+1},()=>new Uint16Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)
+    dp[i][j]=A[i].norm===B[j].norm?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+
+  const L=[],R=[];let i=0,j=0;
+  while(i<n||j<m){
+    if(i<n&&j<m&&A[i].norm===B[j].norm){
+      L.push({t:A[i].raw,s:1});R.push({t:B[j].raw,s:1});i++;j++;
+    }else if(j<m&&(i===n||dp[i][j+1]>=dp[i+1][j])){
+      R.push({t:B[j].raw,s:0});j++;
+    }else{L.push({t:A[i].raw,s:0});i++;}
+  }
+  return {L,R};
+}
+function greedyAlign(A,B){
+  const map=new Map(),used=new Set(),L=[],R=[];
+  B.forEach((x,i)=>{if(!map.has(x.norm))map.set(x.norm,[]);map.get(x.norm).push(i)});
+  A.forEach(x=>{
+    const q=(map.get(x.norm)||[]).find(i=>!used.has(i));
+    if(q===undefined)L.push({t:x.raw,s:0});else{used.add(q);L.push({t:x.raw,s:1});}
+  });
+  B.forEach((x,i)=>R.push({t:x.raw,s:used.has(i)?1:0}));
+  return{L,R};
+}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(xs){return xs.map(x=>`<span class="${x.s?'same':'different'}">${esc(x.t)}</span>`).join(" ")}
+
+/* ---------- 7. ANALYYSI JA KÄYTTÖLIITTYMÄ ---------- */
+
+function updateCounts(){
+  $("oc").textContent=tokenize($("orig").value).length+" words";
+  $("cc").textContent=tokenize($("conv").value).length+" words";
+}
+
+function run(){
+  const rawA=$("orig").value,rawB=$("conv").value,threshold=Number($("threshold").value)/100;
+  updateCounts();
+  if(!rawA.trim()||!rawB.trim()){
+    $("summary").innerHTML="";$("notice").innerHTML="";
+    $("results").innerHTML='<div class="empty">Tarvitaan molemmat tekstit.</div>';return;
+  }
+
+  const A=splitBlocks(rawA),B=splitBlocks(rawB),pairs=matchBlocks(A,B);
+  const flagged=pairs.filter(x=>x.score<threshold);
+  const severe=pairs.filter(x=>x.score<Math.max(0,threshold-0.15));
+
+  $("summary").innerHTML=`
+    <div class="stat"><b>${A.length}</b><br>original blocks</div>
+    <div class="stat"><b>${B.length}</b><br>converted blocks</div>
+    <div class="stat"><b>${flagged.length}</b><br>review</div>
+    <div class="stat"><b>${severe.length}</b><br>strong flags</div>`;
+
+  const imbalance=Math.abs(A.length-B.length);
+  $("notice").innerHTML=imbalance?`<div class="notice">⚠️ Block count differs by <b>${imbalance}</b>. This is itself worth checking; block detection is heuristic and does not rely on numbering.</div>`:"";
+
+  if(!flagged.length){
+    $("results").innerHTML='<div class="ok">✓ No blocks fell below the review threshold.</div>';return;
+  }
+
+  $("results").innerHTML=flagged.map(r=>{
+    const severe=r.score<Math.max(0,threshold-0.15);
+    const d=align(r.a,r.b);
+    return `<article class="result ${severe?'bad':'review'}">
+      <div class="rhead">
+        <b>Original block ${r.i+1}</b>
+        <span class="badge ${severe?'badbadge':'warnbadge'}">${severe?'SUSPICIOUS':'REVIEW'}</span>
+        <span><b>${Math.round(r.score*100)}%</b> textual similarity</span>
+        <span>${r.j>=0?'best converted match: '+(r.j+1):'no converted match'}</span>
+      </div>
+      <div class="pair">
+        <div class="box"><div class="caption">Original</div><div class="diff">${render(d.L)}</div></div>
+        <div class="box"><div class="caption">Converted</div><div class="diff">${r.b?render(d.R):'<span class="different">No matching block found</span>'}</div></div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+$("run").onclick=run;
+$("orig").oninput=updateCounts;$("conv").oninput=updateCounts;
+$("clear").onclick=()=>{$("orig").value="";$("conv").value="";updateCounts();$("summary").innerHTML="";$("notice").innerHTML="";$("results").innerHTML='<div class="empty">Liitä kaksi tekstiä ja paina Check.</div>'};
+$("demo").onclick=()=>{
+$("orig").value=`1. Mikä on fotosynteesin tärkein tehtävä?
+
+A) Muuttaa valoenergia kemialliseksi energiaksi
+B) Hajottaa glukoosia
+C) Tuottaa typpeä
+D) Kuluttaa happea
+
+2. Mitä tarkoittaa inflaatio?
+
+A) Hintatason yleistä nousua
+B) Hintatason laskua
+C) Työttömyyden laskua
+D) Viennin kasvua
+
+3. Mikä seuraavista väitteistä pitää paikkansa Newtonin ensimmäisestä laista?
+
+A) Kappale jatkaa liikettään, ellei siihen vaikuta ulkoinen voima
+B) Voima on massa kertaa kiihtyvyys
+C) Jokaisella voimalle on vastakkainen voima
+D) Energia ei koskaan muutu`;
+
+$("conv").value=`::Question 1::
+Mikä on fotosynteesin tärkein tehtävä? {
+=Muuttamaan valoenergia kemialliseksi energiaksi
+~Hajottamaan glukoosia
+~Tuottamaan typpeä
+~Kuluttamaan happea
+}
+
+::Question 2::
+Mitä tarkoittaa deflaatio? {
+=Hintatason yleinen lasku
+~Hintatason yleinen nousu
+~Työttömyyden lasku
+~Viennin kasvu
+}
+
+::Question 3::
+Mikä seuraavista väitteistä pitää paikkansa Newtonin kolmannesta laista? {
+=Jokaisella voimalle on vastakkainen voima
+~Kappale jatkaa liikettään, ellei siihen vaikuta ulkoinen voima
+~Voima on massa kertaa kiihtyvyys
+~Energia ei koskaan muutu
+}`;
+updateCounts();run();
+};
+updateCounts();
+</script>
+</body>
+</html>
