@@ -1,0 +1,53 @@
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uh-design-system/component-library@1.7.0/dist/component-library/component-library.css" integrity="sha384-h1d+gDMyLEhL9EICgd07n1GdxwURdVhOlAiLGkV/GaU3iul4JAAzZCLYtUBgvNsV" crossorigin="anonymous">
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UH Design System Example</title>
+    <link
+      rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uh-design-system/component-library@1.7.0/dist/component-library/component-library.css" integrity="sha384-h1d+gDMyLEhL9EICgd07n1GdxwURdVhOlAiLGkV/GaU3iul4JAAzZCLYtUBgvNsV" crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <ds-icon name="archive"></ds-icon>
+
+
+    <style>
+      .ds-pg-cont {
+        max-width: 950px;
+        margin: 0 auto;
+        /* Image max-width can be given through css variable from outside the component. */
+        --vertical-image-max-width: 200px;
+      }
+    </style>
+    <div class="ds-pg-cont">
+      <ds-card ds-variant="filled" ds-heading="Interactive Card" ds-heading-level="3" ds-description="Lorem ipsum dolor sit amet
+
+ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip.
+
+ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui.
+
+officia lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi." ds-description-clamp="2" ds-eyebrow="Customizable" ds-subtitle="Try different options" ds-url="https://www.helsinki.fi/fi" ds-url-target="_self" ds-tag="News" ds-horizontal="false" ds-link-type="full" ds-text-size="small">
+        <div slot="image">
+      <ds-media slot="image" ds-src="assets/placeholder.svg" ds-type="image" ds-alt="Placeholder image" ds-aspect-ratio="16/10" ds-use-lazy="false"></ds-media>
+    </div>
+        <div slot="content">
+      <div slot="content">
+        <div style="margin: 1rem;">Content slot</div>
+      </div>
+    </div>
+        <div slot="footer">
+      <div slot="footer">
+        <div style="margin: 1rem 1rem 1.5rem 1rem;">Footer slot</div>
+      </div>
+    </div>
+      </ds-card>
+    </div>
+  
+
+<script src="https://cdn.jsdelivr.net/npm/@uh-design-system/component-library@1.7.0/dist/component-library/component-library.esm.js" integrity="sha384-I5v/VXcgQC+Ak4jHNfopYnRDj8MiZ+yCpDT/xheFqRXI5acozORn8z1YWl1OVzX8" crossorigin="anonymous"></script>
+  </body>
+</html>
